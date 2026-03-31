@@ -1,0 +1,16 @@
+{
+  "name": "Pencarian Hadis Semantik",
+  "short_name": "Hadis Search",
+  "description": "Cari hadis berdasarkan makna dari kitab-kitab hadis utama",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

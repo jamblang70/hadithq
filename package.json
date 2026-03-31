@@ -1,0 +1,19 @@
+{
+  "name": "semantic-hadith-search",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Semantic Hadith Search - pencarian hadis berbasis makna menggunakan vector similarity search",
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "test:backend": "npm run test --workspace=backend",
+    "test:frontend": "npm run test --workspace=frontend",
+    "test": "npm run test:backend && npm run test:frontend"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}

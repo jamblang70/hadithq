@@ -1,0 +1,92 @@
+:root {
+  /* Islamic Minimalist — Light (warm, easy on eyes) */
+  --text: #5c5248;
+  --text-h: #2c1810;
+  --bg: #f7f4f0;
+  --bg-warm: #efe9e0;
+  --border: #ddd5c9;
+  --code-bg: #ece6dc;
+  --accent: #1b5e20;
+  --accent-light: #2e7d32;
+  --accent-bg: rgba(27, 94, 32, 0.08);
+  --accent-border: rgba(27, 94, 32, 0.3);
+  --gold: #c49a30;
+  --gold-bg: rgba(196, 154, 48, 0.1);
+  --gold-border: rgba(196, 154, 48, 0.4);
+  --shadow:
+    rgba(44, 24, 16, 0.06) 0 10px 15px -3px,
+    rgba(44, 24, 16, 0.03) 0 4px 6px -2px;
+  --shadow-hover:
+    rgba(44, 24, 16, 0.1) 0 20px 25px -5px,
+    rgba(44, 24, 16, 0.06) 0 8px 10px -6px;
+
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+  --arabic: "Amiri", "Traditional Arabic", "Scheherazade New", serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* Collection colors — light */
+  --col-bukhari: #1b5e20;
+  --col-muslim: #1a237e;
+  --col-abudawud: #4e342e;
+  --col-tirmidhi: #b71c1c;
+  --col-nasai: #e65100;
+  --col-ibnmajah: #4a148c;
+  --col-malik: #006064;
+
+  font: 16px/1.6 var(--sans);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Dark mode — applied via .dark class on <html> */
+.dark {
+  --text: #b8a99a;
+  --text-h: #f0e8df;
+  --bg: #1a1612;
+  --bg-warm: #231e19;
+  --border: #3a322a;
+  --code-bg: #2a241e;
+  --accent: #66bb6a;
+  --accent-light: #81c784;
+  --accent-bg: rgba(102, 187, 106, 0.12);
+  --accent-border: rgba(102, 187, 106, 0.4);
+  --gold: #ffd54f;
+  --gold-bg: rgba(255, 213, 79, 0.1);
+  --gold-border: rgba(255, 213, 79, 0.3);
+  --shadow:
+    rgba(0, 0, 0, 0.3) 0 10px 15px -3px,
+    rgba(0, 0, 0, 0.2) 0 4px 6px -2px;
+  --shadow-hover:
+    rgba(0, 0, 0, 0.4) 0 20px 25px -5px,
+    rgba(0, 0, 0, 0.3) 0 8px 10px -6px;
+
+  --col-bukhari: #66bb6a;
+  --col-muslim: #7986cb;
+  --col-abudawud: #a1887f;
+  --col-tirmidhi: #ef5350;
+  --col-nasai: #ff9800;
+  --col-ibnmajah: #ce93d8;
+  --col-malik: #4dd0e1;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+p {
+  margin: 0;
+}
