@@ -37,7 +37,7 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 
 1. Clone repositori:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/hadithq.git
+   git clone https://github.com/jamblang70/hadithq.git
    cd hadithq
    ```
 
