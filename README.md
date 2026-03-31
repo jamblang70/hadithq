@@ -6,6 +6,9 @@ Cari hadis berdasarkan makna, didukung AI dan 7 koleksi kitab utama. Pencarian s
 
 - 🔍 **Pencarian Semantik** — cari hadis berdasarkan makna, bukan kata kunci persis
 - 🤖 **AI Search** — pencarian lebih akurat menggunakan GPT-4o-mini (RAG)
+- � **Tanya AI** — chat conversational tentang hadis, AI menjawab dengan mengutip sumber
+- �️ **Jelajahi Tema** — browse hadis berdasarkan 12 tema populer (Sabar, Sholat, Puasa, dll)
+- � **Reading Mode** — tampilan baca immersive di halaman detail hadis
 - 📖 **Hadis Harian** — hadis pilihan yang berubah setiap hari
 - 🔖 **Bookmark** — simpan hadis favorit di browser
 - 📋 **Copy & Share** — salin atau bagikan hadis dengan mudah
@@ -87,6 +90,7 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 | GET | `/api/health` | Health check |
 | POST | `/api/search` | Pencarian semantik |
 | POST | `/api/ai-search` | Pencarian AI (RAG) |
+| POST | `/api/chat` | AI Chat tentang hadis |
 | GET | `/api/daily` | Hadis harian |
 | GET | `/api/stats` | Statistik |
 | GET | `/api/collections` | Daftar koleksi |
