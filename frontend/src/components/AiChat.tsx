@@ -3,6 +3,7 @@ import { sendChatMessage, type ChatMessage, type ChatResponse } from "../api/cha
 
 interface Props {
   onBack: () => void;
+  onOpenHadith: (hadithId: string) => void;
 }
 
 interface DisplayMessage {
@@ -11,7 +12,7 @@ interface DisplayMessage {
   sources?: ChatResponse["sources"];
 }
 
-export default function AiChat({ onBack }: Props) {
+export default function AiChat({ onBack, onOpenHadith }: Props) {
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -76,7 +77,15 @@ export default function AiChat({ onBack }: Props) {
               <div className="chat-sources">
                 <span className="chat-sources-label">📚 Sumber:</span>
                 {msg.sources.map((s, j) => (
-                  <span key={j} className="chat-source-tag">{s.collection} #{s.number}</span>
+                  <button
+                    key={j}
+                    className="chat-source-tag"
+                    onClick={() => onOpenHadith(s.hadith_id)}
+                    type="button"
+                    title="Buka hadis ini dalam mode baca"
+                  >
+                    {s.collection} #{s.number} ↗
+                  </button>
                 ))}
               </div>
             )}

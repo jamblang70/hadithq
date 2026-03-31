@@ -75,6 +75,7 @@ export class AiChatService {
 
     // Extract sources
     const sources = searchResults.results.slice(0, 5).map((r: SearchResult) => ({
+      hadith_id: r.hadith.id,
       collection: r.hadith.collection_name,
       number: r.hadith.hadith_number,
       text: (r.hadith.text_indonesian || r.hadith.text_english || "").slice(0, 150),

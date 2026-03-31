@@ -7,7 +7,7 @@ export interface ChatMessage {
 
 export interface ChatResponse {
   reply: string;
-  sources: Array<{ collection: string; number: number; text: string }>;
+  sources: Array<{ hadith_id: string; collection: string; number: number; text: string }>;
 }
 
 export async function sendChatMessage(message: string, history: ChatMessage[]): Promise<ChatResponse> {

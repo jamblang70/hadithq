@@ -255,7 +255,14 @@ function App() {
             onSelectHadith={handleSelectHadith}
           />
         ) : view === "chat" ? (
-          <AiChat onBack={() => setView("search")} />
+          <AiChat
+            onBack={() => setView("search")}
+            onOpenHadith={(hadithId) => {
+              setSelectedHadithId(hadithId);
+              setView("detail");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
         ) : (
           <>
             <SearchForm onSearch={handleSearch} loading={loading} />
