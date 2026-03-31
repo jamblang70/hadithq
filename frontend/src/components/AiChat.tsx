@@ -93,7 +93,9 @@ export default function AiChat({ onBack, onOpenHadith }: Props) {
         ))}
         {loading && (
           <div className="chat-bubble assistant">
-            <div className="chat-bubble-content chat-typing">AI sedang berpikir...</div>
+            <div className="chat-bubble-content chat-typing">
+              <span className="typing-dots">●</span> Mencari hadis & menyusun jawaban...
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />

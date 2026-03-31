@@ -1254,3 +1254,14 @@
 .chat-send-btn:hover:not(:disabled) {
   background: var(--accent-light);
 }
+
+/* ===== Typing Animation ===== */
+.typing-dots {
+  display: inline-block;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}

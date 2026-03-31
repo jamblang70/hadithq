@@ -35,7 +35,7 @@ export class AiChatService {
       language: "id",
       collections: [],
       grade_filter: [],
-      limit: 10,
+      limit: 5,
       offset: 0,
       min_score: 0.05,
     };
@@ -68,7 +68,7 @@ export class AiChatService {
       model: "gpt-4o-mini",
       messages,
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 800,
     });
 
     const reply = completion.choices[0]?.message?.content || "Maaf, saya tidak bisa menjawab saat ini.";
