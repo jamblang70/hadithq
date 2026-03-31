@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { validateSearch } from "../middleware/validateSearch.js";
 import { semanticSearch } from "../services/searchEngine.js";
 import { AiSearchService } from "../services/aiSearchService.js";
+import { AiChatService, type ChatMessage } from "../services/aiChatService.js";
 import { EmbeddingService } from "../services/embeddingService.js";
 import { VectorRepository } from "../repositories/vectorRepository.js";
 import { HadithRepository } from "../repositories/hadithRepository.js";
@@ -18,6 +19,7 @@ const vectorRepository = new VectorRepository();
 const hadithRepository = new HadithRepository();
 const cacheRepository = new CacheRepository();
 const aiSearchService = new AiSearchService();
+const aiChatService = new AiChatService();
 
 /**
  * POST /api/search
@@ -74,6 +76,33 @@ router.post(
     }
   }
 );
+
+/**
+ * POST /api/chat
+ * AI chat about hadith — conversational Q&A with hadith references.
+ */
+router.post("/chat", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { message, history } = req.body as { message: string; history?: ChatMessage[] };
+
+    if (!message || typeof message !== "string" || message.trim().length === 0) {
+      res.status(400).json({ error: "message is required" });
+      return;
+    }
+
+    const result = await aiChatService.chat(message.trim(), history || [], {
+      embeddingService,
+      vectorRepository,
+      hadithRepository,
+      cacheRepository,
+    });
+
+    res.json(result);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Internal server error";
+    res.status(503).json({ error: msg });
+  }
+});
 
 /**
  * GET /api/daily

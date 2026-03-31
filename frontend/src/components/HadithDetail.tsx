@@ -25,6 +25,7 @@ export default function HadithDetail({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [readingMode, setReadingMode] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,7 +68,7 @@ export default function HadithDetail({
   if (!hadith) return null;
 
   return (
-    <article className="hadith-detail">
+    <article className={`hadith-detail${readingMode ? " reading-mode" : ""}`}>
       <button onClick={onBack} className="back-btn" type="button">
         ← Back to results
       </button>
@@ -105,6 +106,14 @@ export default function HadithDetail({
               📤
             </button>
           )}
+          <button
+            className={`action-btn reading-btn${readingMode ? " active" : ""}`}
+            onClick={() => setReadingMode(!readingMode)}
+            type="button"
+            title={readingMode ? "Exit reading mode" : "Reading mode"}
+          >
+            📖
+          </button>
         </div>
       </header>
 

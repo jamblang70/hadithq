@@ -5,6 +5,8 @@ import HadithDetail from "./components/HadithDetail";
 import BookmarksView from "./components/BookmarksView";
 import DailyHadith from "./components/DailyHadith";
 import StatsBar from "./components/StatsBar";
+import ThemeExplorer from "./components/ThemeExplorer";
+import AiChat from "./components/AiChat";
 import { searchHadith, aiSearchHadith } from "./api/hadithApi";
 import { getBookmarks, addBookmark, removeBookmark, isBookmarked } from "./utils/bookmarks";
 import { formatHadithText, copyToClipboard, shareHadith } from "./utils/clipboard";
@@ -12,7 +14,7 @@ import type { SearchFilters, SearchResponse, Hadith } from "./types";
 import type { BookmarkEntry } from "./utils/bookmarks";
 import "./App.css";
 
-type View = "search" | "detail" | "bookmarks";
+type View = "search" | "detail" | "bookmarks" | "chat";
 
 const LIMIT = 20;
 
@@ -216,6 +218,14 @@ function App() {
             {isDark ? "☀️" : "🌙"}
           </button>
           <button
+            className={`header-nav-btn${view === "chat" ? " active" : ""}`}
+            onClick={() => setView("chat")}
+            type="button"
+            title="AI Chat"
+          >
+            🤖 Tanya AI
+          </button>
+          <button
             className={`header-nav-btn${view === "bookmarks" ? " active" : ""}`}
             onClick={() => setView("bookmarks")}
             type="button"
@@ -244,6 +254,8 @@ function App() {
             onRemoveBookmark={handleRemoveBookmark}
             onSelectHadith={handleSelectHadith}
           />
+        ) : view === "chat" ? (
+          <AiChat onBack={() => setView("search")} />
         ) : (
           <>
             <SearchForm onSearch={handleSearch} loading={loading} />
@@ -251,6 +263,9 @@ function App() {
             {!loading && !response && (
               <>
                 <StatsBar />
+                <ThemeExplorer onThemeClick={(query) => {
+                  handleSearch(query, { collections: [], language: "id", grades: [] }, true);
+                }} />
                 <DailyHadith onSelectHadith={handleSelectHadith} />
               </>
             )}
