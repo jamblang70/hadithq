@@ -46,6 +46,11 @@ export async function getHadithById(id: string): Promise<Hadith> {
   return data.hadith;
 }
 
+export async function lookupHadith(collection: string, number: number): Promise<Hadith> {
+  const data = await request<{ hadith: Hadith }>(`${API_BASE}/hadith/lookup/${encodeURIComponent(collection)}/${number}`);
+  return data.hadith;
+}
+
 export async function getDailyHadith(): Promise<Hadith> {
   const data = await request<{ hadith: Hadith }>(`${API_BASE}/daily`);
   return data.hadith;
