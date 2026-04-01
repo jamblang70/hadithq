@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { sendChatMessage, type ChatMessage, type ChatResponse } from "../api/chatApi";
+import { getUserFacingErrorMessage } from "../utils/errorMessages";
 
 export interface DisplayMessage {
   role: "user" | "assistant";
@@ -45,7 +46,7 @@ export default function AiChat({ onBack, onOpenHadith, messages, onMessagesChang
       };
       onMessagesChange([...next, assistantMsg]);
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Gagal mengirim pesan";
+      const errMsg = getUserFacingErrorMessage(err);
       onMessagesChange([...next, { role: "assistant", content: `⚠️ ${errMsg}` }]);
     }
   }

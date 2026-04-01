@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { buildFilterExpression, rerank, semanticSearch } from "./searchEngine.js";
+import { buildFilterExpression, buildSearchCacheKey, rerank, semanticSearch } from "./searchEngine.js";
 import type { RankedSearchResult, SearchDependencies } from "./searchEngine.js";
 import type { FilterOptions, SearchResult, SearchRequest, Hadith } from "../types/index.js";
 
@@ -349,5 +349,62 @@ describe("semanticSearch fallback", () => {
     expect(response).toHaveProperty("page");
     expect(response).toHaveProperty("total_pages");
     expect(response.processing_time_ms).toBeGreaterThanOrEqual(0);
+  });
+
+  it("includes filters and pagination inputs in the cache key", () => {
+    const cacheRepository = {
+      generateKey: vi.fn((...parts: string[]) => parts.join(":")),
+    } as any;
+
+    const cacheKey = buildSearchCacheKey(
+      makeRequest({
+        collections: ["muslim", "bukhari"],
+        grade_filter: ["hasan", "sahih"],
+        limit: 10,
+        offset: 20,
+        min_score: 0.15,
+      }),
+      cacheRepository
+    );
+
+    expect(cacheRepository.generateKey).toHaveBeenCalledWith(
+      "search",
+      "sabar",
+      "bukhari,muslim",
+      "id",
+      "hasan,sahih",
+      "10",
+      "20",
+      "0.15"
+    );
+    expect(cacheKey).toContain("hasan,sahih");
+    expect(cacheKey).toContain("10:20:0.15");
+  });
+
+  it("bypasses an existing cache entry when pagination changes", async () => {
+    const cacheStore = new Map<string, any>();
+    const deps = makeDeps({
+      cacheRepository: {
+        generateKey: vi.fn((...parts: string[]) => parts.join(":")),
+        get: vi.fn((key: string) => cacheStore.get(key) ?? null),
+        set: vi.fn((key: string, value: unknown) => cacheStore.set(key, value)),
+      } as any,
+      vectorRepository: {
+        search: vi.fn().mockResolvedValue([]),
+        upsert: vi.fn(),
+      } as any,
+    });
+
+    await semanticSearch(makeRequest({ limit: 20, offset: 0 }), deps);
+    await semanticSearch(makeRequest({ limit: 20, offset: 20 }), deps);
+
+    expect(deps.cacheRepository.get).toHaveBeenNthCalledWith(
+      1,
+      "search:sabar::id::20:0:0.5"
+    );
+    expect(deps.cacheRepository.get).toHaveBeenNthCalledWith(
+      2,
+      "search:sabar::id::20:20:0.5"
+    );
   });
 });

@@ -12,6 +12,7 @@ import { getBookmarks, addBookmark, removeBookmark, isBookmarked } from "./utils
 import { formatHadithText, copyToClipboard, shareHadith } from "./utils/clipboard";
 import type { SearchFilters, SearchResponse, Hadith } from "./types";
 import type { BookmarkEntry } from "./utils/bookmarks";
+import { getUserFacingErrorMessage } from "./utils/errorMessages";
 import "./App.css";
 
 type View = "search" | "detail" | "bookmarks" | "chat";
@@ -93,8 +94,7 @@ function App() {
         }
         setCurrentPage(page);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Search failed";
-        setError(msg);
+        setError(getUserFacingErrorMessage(err));
         setResponse(null);
       } finally {
         setLoading(false);
@@ -147,8 +147,7 @@ function App() {
       }
       setBookmarks(getBookmarks());
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update bookmark";
-      setError(msg);
+      setError(getUserFacingErrorMessage(err));
     }
   }
 
@@ -157,8 +156,7 @@ function App() {
       removeBookmark(hadithId);
       setBookmarks(getBookmarks());
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to remove bookmark";
-      setError(msg);
+      setError(getUserFacingErrorMessage(err));
     }
   }
 

@@ -7,7 +7,12 @@
 
 import { logger } from "./logger.js";
 
-const REQUIRED_VARS = ["DATABASE_URL", "QDRANT_URL", "OPENAI_API_KEY"] as const;
+const REQUIRED_VARS = [
+  "DATABASE_URL",
+  "QDRANT_URL",
+  "OPENAI_API_KEY",
+  "ADMIN_API_KEY",
+] as const;
 
 export function validateEnv(): void {
   const missing = REQUIRED_VARS.filter((v) => !process.env[v]);
