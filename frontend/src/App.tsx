@@ -261,7 +261,9 @@ function App() {
           <AiChat
             onBack={() => setView("search")}
             onOpenHadith={(hadithId) => {
+              selectedHadithRef.current = null;
               setSelectedHadithId(hadithId);
+              setPreviousView("chat");
               setView("detail");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
