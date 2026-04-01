@@ -20,6 +20,7 @@ const LIMIT = 20;
 
 function App() {
   const [view, setView] = useState<View>("search");
+  const [previousView, setPreviousView] = useState<View>("search");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [response, setResponse] = useState<SearchResponse | null>(null);
@@ -119,12 +120,13 @@ function App() {
     const found = response?.results.find((r) => r.hadith.id === id);
     selectedHadithRef.current = found?.hadith ?? null;
     setSelectedHadithId(id);
+    setPreviousView(view);
     setView("detail");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleBackToResults() {
-    setView("search");
+    setView(previousView);
   }
 
   function handleToggleBookmark(hadith: Hadith) {
@@ -243,6 +245,7 @@ function App() {
           <HadithDetail
             hadithId={selectedHadithId}
             onBack={handleBackToResults}
+            backLabel={previousView === "chat" ? "← Kembali ke Chat" : "← Kembali ke hasil"}
             isBookmarked={detailIsBookmarked}
             onToggleBookmark={handleDetailToggleBookmark}
             onCopyHadith={handleDetailCopy}

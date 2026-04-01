@@ -5,6 +5,7 @@ import type { Hadith } from "../types";
 interface Props {
   hadithId: string;
   onBack: () => void;
+  backLabel?: string;
   isBookmarked: boolean;
   onToggleBookmark: () => void;
   onCopyHadith: () => void;
@@ -16,6 +17,7 @@ const canShare = typeof navigator !== "undefined" && typeof navigator.share === 
 export default function HadithDetail({
   hadithId,
   onBack,
+  backLabel = "← Back to results",
   isBookmarked,
   onToggleBookmark,
   onCopyHadith,
@@ -70,7 +72,7 @@ export default function HadithDetail({
   return (
     <article className={`hadith-detail${readingMode ? " reading-mode" : ""}`}>
       <button onClick={onBack} className="back-btn" type="button">
-        ← Back to results
+        {backLabel}
       </button>
 
       <header className="detail-header">
