@@ -1,5 +1,3 @@
-import { requestJson } from "./http";
-
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
 
 export interface ChatMessage {
@@ -13,9 +11,14 @@ export interface ChatResponse {
 }
 
 export async function sendChatMessage(message: string, history: ChatMessage[]): Promise<ChatResponse> {
-  return requestJson<ChatResponse>(`${API_BASE}/chat`, {
+  const res = await fetch(`${API_BASE}/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, history }),
   });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(body.error || res.statusText);
+  }
+  return res.json();
 }

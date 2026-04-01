@@ -58,7 +58,6 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
    DATABASE_URL=postgresql://user:password@localhost:5432/hadith_search
    QDRANT_URL=http://localhost:6333
    OPENAI_API_KEY=sk-...
-   ADMIN_API_KEY=your-long-random-admin-key
    ```
 
 4. Jalankan PostgreSQL dan Qdrant (Docker):
@@ -80,10 +79,8 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 
 7. Index data hadis (pertama kali):
    ```bash
-   curl -X POST http://localhost:3000/api/admin/index \
-     -H "Authorization: Bearer your-long-random-admin-key"
-   curl -X POST http://localhost:3000/api/admin/embed-indonesian \
-     -H "Authorization: Bearer your-long-random-admin-key"
+   curl -X POST http://localhost:3000/api/admin/index
+   curl -X POST http://localhost:3000/api/admin/embed-indonesian
    ```
 
 ## API Endpoints
@@ -115,7 +112,7 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 1. Connect repo GitHub ke Railway
 2. Set root directory: `backend/`
 3. Railway menggunakan `Dockerfile` untuk build
-4. Set env: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `ADMIN_API_KEY`, `ALLOWED_ORIGINS`, `NODE_ENV=production`
+4. Set env: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `ALLOWED_ORIGINS`, `NODE_ENV=production`
 
 ## Lisensi
 

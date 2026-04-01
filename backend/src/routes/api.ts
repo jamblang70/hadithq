@@ -10,7 +10,6 @@ import { CacheRepository } from "../repositories/cacheRepository.js";
 import { ensureCollection } from "../db/qdrant.js";
 import { IndexingService } from "../services/indexingService.js";
 import type { SearchRequest } from "../types/index.js";
-import { adminAuth } from "../middleware/adminAuth.js";
 
 const router = Router();
 
@@ -178,7 +177,7 @@ router.get("/hadith/:id", async (req: Request<{ id: string }>, res: Response): P
  * Triggers full hadith indexing from the external API.
  * Ensures the Qdrant collection exists, then indexes all collections.
  */
-router.post("/admin/index", adminAuth, async (_req: Request, res: Response): Promise<void> => {
+router.post("/admin/index", async (_req: Request, res: Response): Promise<void> => {
   try {
     await ensureCollection();
 
@@ -202,7 +201,7 @@ router.post("/admin/index", adminAuth, async (_req: Request, res: Response): Pro
  * Embeds Indonesian text from existing hadiths into Qdrant.
  * Each hadith gets a second vector point with ID "{hadithId}-id" for Indonesian search.
  */
-router.post("/admin/embed-indonesian", adminAuth, async (_req: Request, res: Response): Promise<void> => {
+router.post("/admin/embed-indonesian", async (_req: Request, res: Response): Promise<void> => {
   try {
     await ensureCollection();
 

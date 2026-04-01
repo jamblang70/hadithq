@@ -120,22 +120,6 @@ export function rerank(results: SearchResult[]): RankedSearchResult[] {
  */
 const CACHE_TTL_SECONDS = 3600;
 
-export function buildSearchCacheKey(
-  request: SearchRequest,
-  cacheRepository: CacheRepository
-): string {
-  return cacheRepository.generateKey(
-    "search",
-    request.query,
-    [...(request.collections ?? [])].sort().join(","),
-    request.language,
-    [...(request.grade_filter ?? [])].sort().join(","),
-    String(request.limit),
-    String(request.offset),
-    String(request.min_score)
-  );
-}
-
 /**
  * semanticSearch - alur pencarian utama.
  *
@@ -159,7 +143,12 @@ export async function semanticSearch(
   const startTime = Date.now();
 
   // 1. Generate cache key
-  const cacheKey = buildSearchCacheKey(request, deps.cacheRepository);
+  const cacheKey = deps.cacheRepository.generateKey(
+    "search",
+    request.query,
+    (request.collections ?? []).sort().join(","),
+    request.language
+  );
 
   // 2. Check cache
   const cached = deps.cacheRepository.get<SearchResponse>(cacheKey);
