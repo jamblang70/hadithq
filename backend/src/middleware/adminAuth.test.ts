@@ -35,6 +35,20 @@ describe("adminAuth middleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  it("returns 503 when admin auth is not configured", () => {
+    process.env.ADMIN_API_KEY = "";
+
+    const req = { headers: {} } as Request;
+    const res = makeResponse();
+    const next = vi.fn() as NextFunction;
+
+    adminAuth(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    expect(res.json).toHaveBeenCalledWith({ error: "Admin endpoint is not configured" });
+    expect(next).not.toHaveBeenCalled();
+  });
+
   it("rejects requests with an invalid bearer token", () => {
     const req = {
       headers: { authorization: "Bearer wrong-key" },

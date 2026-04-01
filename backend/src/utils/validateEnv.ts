@@ -11,7 +11,6 @@ const REQUIRED_VARS = [
   "DATABASE_URL",
   "QDRANT_URL",
   "OPENAI_API_KEY",
-  "ADMIN_API_KEY",
 ] as const;
 
 export function validateEnv(): void {
