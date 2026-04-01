@@ -28,7 +28,7 @@ export class AiChatService {
     userMessage: string,
     history: ChatMessage[],
     deps: SearchDependencies
-  ): Promise<{ reply: string; sources: Array<{ collection: string; number: number; text: string }> }> {
+  ): Promise<{ reply: string; sources: Array<{ hadith_id: string; collection: string; number: number; text: string }> }> {
     // Step 1: Search for relevant hadiths
     const searchRequest: SearchRequest = {
       query: userMessage,
@@ -37,22 +37,25 @@ export class AiChatService {
       grade_filter: [],
       limit: 5,
       offset: 0,
-      min_score: 0.05,
+      min_score: 0.3,
     };
 
     const searchResults = await semanticSearch(searchRequest, deps);
 
-    // Step 2: Build context from search results
+    // Step 2: Build context from search results — include index so AI can reference them
     const hadithContext = searchResults.results.map((r: SearchResult, i: number) => {
       const h = r.hadith;
       const text = h.text_indonesian || h.text_english || "";
-      return `[Hadis ${i + 1}] ${h.collection_name} #${h.hadith_number} (${h.grade}):\n${text}`;
+      return `[REF-${i + 1}] ${h.collection_name} #${h.hadith_number} (${h.grade}):\n${text}`;
     }).join("\n\n");
 
     // Step 3: Build messages
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "system", content: `Berikut hadis-hadis yang relevan dari database:\n\n${hadithContext}\n\nGunakan hadis-hadis di atas untuk menjawab pertanyaan pengguna. Kutip nomor hadis saat mengutip.` },
+      {
+        role: "system",
+        content: `Berikut hadis-hadis yang relevan dari database:\n\n${hadithContext}\n\nSaat mengutip hadis, gunakan format [REF-N] (contoh: [REF-1], [REF-2]) agar referensi bisa dilacak. Hanya kutip hadis yang benar-benar relevan dengan pertanyaan.`,
+      },
     ];
 
     // Add conversation history (last 6 messages)
@@ -73,13 +76,31 @@ export class AiChatService {
 
     const reply = completion.choices[0]?.message?.content || "Maaf, saya tidak bisa menjawab saat ini.";
 
-    // Extract sources
-    const sources = searchResults.results.slice(0, 5).map((r: SearchResult) => ({
-      hadith_id: r.hadith.id,
-      collection: r.hadith.collection_name,
-      number: r.hadith.hadith_number,
-      text: (r.hadith.text_indonesian || r.hadith.text_english || "").slice(0, 150),
-    }));
+    // Step 5: Extract only the sources actually cited in the reply
+    const citedIndices = new Set<number>();
+    const refPattern = /\[REF-(\d+)\]/g;
+    let match;
+    while ((match = refPattern.exec(reply)) !== null) {
+      const idx = parseInt(match[1], 10) - 1;
+      if (idx >= 0 && idx < searchResults.results.length) {
+        citedIndices.add(idx);
+      }
+    }
+
+    // If AI didn't use REF tags, fall back to top results that were provided
+    const indicesToUse = citedIndices.size > 0
+      ? Array.from(citedIndices)
+      : searchResults.results.map((_, i) => i);
+
+    const sources = indicesToUse.map((i) => {
+      const r = searchResults.results[i];
+      return {
+        hadith_id: r.hadith.id,
+        collection: r.hadith.collection_name,
+        number: r.hadith.hadith_number,
+        text: (r.hadith.text_indonesian || r.hadith.text_english || "").slice(0, 150),
+      };
+    });
 
     return { reply, sources };
   }
