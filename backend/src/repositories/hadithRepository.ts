@@ -118,22 +118,6 @@ export class HadithRepository {
   }
 
   /**
-   * Get a hadith by collection ID and hadith number.
-   */
-  async getHadithByNumber(collectionId: string, hadithNumber: number): Promise<Hadith | null> {
-    const query = `
-      SELECT id, external_id, collection_id, collection_name, book_number, book_name,
-             hadith_number, text_arabic, text_indonesian, text_english,
-             narrator, grade, reference, created_at, updated_at
-      FROM hadiths
-      WHERE collection_id = $1 AND hadith_number = $2
-      LIMIT 1
-    `;
-    const result = await pool.query(query, [collectionId, hadithNumber]);
-    return (result.rows[0] as Hadith) ?? null;
-  }
-
-  /**
    * Get hadiths by collection with pagination.
    */
   async getHadithByCollection(
