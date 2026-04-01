@@ -154,6 +154,30 @@ router.get("/collections", async (_req: Request, res: Response): Promise<void> =
 });
 
 /**
+ * GET /api/hadith/lookup/:collection/:number
+ * Lookup a hadith by collection ID and hadith number.
+ */
+router.get("/hadith/lookup/:collection/:number", async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { collection, number } = req.params;
+    const hadithNumber = parseFloat(number);
+    if (isNaN(hadithNumber) || hadithNumber <= 0) {
+      res.status(400).json({ error: "Invalid hadith number" });
+      return;
+    }
+    const hadith = await hadithRepository.getHadithByNumber(collection, hadithNumber);
+    if (!hadith) {
+      res.status(404).json({ error: `Hadith ${collection} #${number} not found` });
+      return;
+    }
+    res.json({ hadith });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Internal server error";
+    res.status(503).json({ error: message });
+  }
+});
+
+/**
  * GET /api/hadith/:id
  * Returns full hadith detail by UUID.
  */

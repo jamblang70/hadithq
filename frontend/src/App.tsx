@@ -109,6 +109,13 @@ function App() {
     doSearch(query, filters, 1, useAi);
   }
 
+  function handleLookupResult(hadith: Hadith) {
+    selectedHadithRef.current = hadith;
+    setSelectedHadithId(hadith.id);
+    setView("detail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function handlePageChange(page: number) {
     doSearch(lastQuery, lastFilters, page, lastUseAi);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -265,7 +272,7 @@ function App() {
           />
         ) : (
           <>
-            <SearchForm onSearch={handleSearch} loading={loading} />
+            <SearchForm onSearch={handleSearch} onLookupResult={handleLookupResult} loading={loading} />
 
             {!loading && !response && (
               <>
