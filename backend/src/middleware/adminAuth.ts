@@ -18,11 +18,6 @@ export function adminAuth(req: Request, res: Response, next: NextFunction): void
   const expectedApiKey = process.env.ADMIN_API_KEY;
   const providedToken = getTokenFromHeader(req);
 
-  if (!expectedApiKey) {
-    res.status(503).json({ error: "Admin endpoint is not configured" });
-    return;
-  }
-
   if (!providedToken) {
     res.status(401).json({ error: "Admin authentication required" });
     return;
