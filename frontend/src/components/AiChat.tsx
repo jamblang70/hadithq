@@ -1,21 +1,21 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { sendChatMessage, type ChatMessage, type ChatResponse } from "../api/chatApi";
 
-interface Props {
-  onBack: () => void;
-  onOpenHadith: (hadithId: string) => void;
-}
-
-interface DisplayMessage {
+export interface DisplayMessage {
   role: "user" | "assistant";
   content: string;
   sources?: ChatResponse["sources"];
 }
 
-export default function AiChat({ onBack, onOpenHadith }: Props) {
-  const [messages, setMessages] = useState<DisplayMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+interface Props {
+  onBack: () => void;
+  onOpenHadith: (hadithId: string) => void;
+  messages: DisplayMessage[];
+  onMessagesChange: (messages: DisplayMessage[]) => void;
+}
+
+export default function AiChat({ onBack, onOpenHadith, messages, onMessagesChange }: Props) {
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,13 +23,17 @@ export default function AiChat({ onBack, onOpenHadith }: Props) {
   }, [messages]);
 
   async function handleSend() {
-    const text = input.trim();
-    if (!text || loading) return;
+    const text = inputRef.current?.value.trim();
+    if (!text) return;
 
     const userMsg: DisplayMessage = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
-    setLoading(true);
+    const next = [...messages, userMsg];
+    onMessagesChange(next);
+    if (inputRef.current) inputRef.current.value = "";
+
+    // loading indicator
+    const loadingMsg: DisplayMessage = { role: "assistant", content: "__loading__" };
+    onMessagesChange([...next, loadingMsg]);
 
     try {
       const history: ChatMessage[] = messages.map((m) => ({ role: m.role, content: m.content }));
@@ -39,12 +43,10 @@ export default function AiChat({ onBack, onOpenHadith }: Props) {
         content: result.reply,
         sources: result.sources,
       };
-      setMessages((prev) => [...prev, assistantMsg]);
+      onMessagesChange([...next, assistantMsg]);
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Gagal mengirim pesan";
-      setMessages((prev) => [...prev, { role: "assistant", content: `⚠️ ${errMsg}` }]);
-    } finally {
-      setLoading(false);
+      onMessagesChange([...next, { role: "assistant", content: `⚠️ ${errMsg}` }]);
     }
   }
 
@@ -54,6 +56,8 @@ export default function AiChat({ onBack, onOpenHadith }: Props) {
       handleSend();
     }
   }
+
+  const isLoading = messages.at(-1)?.content === "__loading__";
 
   return (
     <div className="ai-chat">
@@ -72,46 +76,46 @@ export default function AiChat({ onBack, onOpenHadith }: Props) {
         )}
         {messages.map((msg, i) => (
           <div key={i} className={`chat-bubble ${msg.role}`}>
-            <div className="chat-bubble-content">{msg.content}</div>
-            {msg.sources && msg.sources.length > 0 && (
-              <div className="chat-sources">
-                <span className="chat-sources-label">📚 Sumber:</span>
-                {msg.sources.map((s, j) => (
-                  <button
-                    key={j}
-                    className="chat-source-tag"
-                    onClick={() => onOpenHadith(s.hadith_id)}
-                    type="button"
-                    title="Buka hadis ini dalam mode baca"
-                  >
-                    {s.collection} #{s.number} ↗
-                  </button>
-                ))}
+            {msg.content === "__loading__" ? (
+              <div className="chat-bubble-content chat-typing">
+                <span className="typing-dots">●</span> Mencari hadis & menyusun jawaban...
               </div>
+            ) : (
+              <>
+                <div className="chat-bubble-content">{msg.content}</div>
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="chat-sources">
+                    <span className="chat-sources-label">📚 Sumber:</span>
+                    {msg.sources.map((s, j) => (
+                      <button
+                        key={j}
+                        className="chat-source-tag"
+                        onClick={() => onOpenHadith(s.hadith_id)}
+                        type="button"
+                        title="Buka hadis ini dalam mode baca"
+                      >
+                        {s.collection} #{s.number} ↗
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         ))}
-        {loading && (
-          <div className="chat-bubble assistant">
-            <div className="chat-bubble-content chat-typing">
-              <span className="typing-dots">●</span> Mencari hadis & menyusun jawaban...
-            </div>
-          </div>
-        )}
         <div ref={messagesEndRef} />
       </div>
 
       <div className="ai-chat-input">
         <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          ref={inputRef}
           onKeyDown={handleKeyDown}
           placeholder="Tanyakan tentang hadis..."
           rows={2}
-          disabled={loading}
+          disabled={isLoading}
         />
-        <button onClick={handleSend} disabled={loading || !input.trim()} className="chat-send-btn" type="button">
-          {loading ? "..." : "Kirim"}
+        <button onClick={handleSend} disabled={isLoading} className="chat-send-btn" type="button">
+          {isLoading ? "..." : "Kirim"}
         </button>
       </div>
     </div>

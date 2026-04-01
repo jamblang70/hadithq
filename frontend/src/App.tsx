@@ -6,7 +6,7 @@ import BookmarksView from "./components/BookmarksView";
 import DailyHadith from "./components/DailyHadith";
 import StatsBar from "./components/StatsBar";
 import ThemeExplorer from "./components/ThemeExplorer";
-import AiChat from "./components/AiChat";
+import AiChat, { type DisplayMessage } from "./components/AiChat";
 import { searchHadith, aiSearchHadith } from "./api/hadithApi";
 import { getBookmarks, addBookmark, removeBookmark, isBookmarked } from "./utils/bookmarks";
 import { formatHadithText, copyToClipboard, shareHadith } from "./utils/clipboard";
@@ -35,6 +35,7 @@ function App() {
   const [lastUseAi, setLastUseAi] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [bookmarks, setBookmarks] = useState<BookmarkEntry[]>([]);
+  const [chatMessages, setChatMessages] = useState<DisplayMessage[]>([]);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -267,6 +268,8 @@ function App() {
               setView("detail");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
+            messages={chatMessages}
+            onMessagesChange={setChatMessages}
           />
         ) : (
           <>
