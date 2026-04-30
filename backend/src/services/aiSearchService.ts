@@ -37,7 +37,10 @@ export class AiSearchService {
   private client: OpenAI;
 
   constructor(client?: OpenAI) {
-    this.client = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.client = client ?? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+    });
   }
 
   async search(
@@ -77,7 +80,7 @@ export class AiSearchService {
     let aiResults: Array<{ index: number; relevance_explanation: string }> = [];
     try {
       const completion = await this.client.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: process.env.LLM_MODEL || "gpt-4o-mini",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userMessage },

@@ -21,7 +21,10 @@ export class AiChatService {
   private client: OpenAI;
 
   constructor(client?: OpenAI) {
-    this.client = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    this.client = client ?? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+    });
   }
 
   async chat(
@@ -68,7 +71,7 @@ export class AiChatService {
 
     // Step 4: Call LLM
     const completion = await this.client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: process.env.LLM_MODEL || "gpt-4o-mini",
       messages,
       temperature: 0.3,
       max_tokens: 800,
