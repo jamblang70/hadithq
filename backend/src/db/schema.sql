@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS hadiths (
   collection_name TEXT NOT NULL,
   book_number INTEGER NOT NULL DEFAULT 0,
   book_name TEXT NOT NULL DEFAULT '',
-  hadith_number INTEGER NOT NULL CHECK (hadith_number > 0),
+  hadith_number NUMERIC(10,2) NOT NULL CHECK (hadith_number > 0),
   text_arabic TEXT NOT NULL DEFAULT '',
   text_indonesian TEXT NOT NULL DEFAULT '',
   text_english TEXT NOT NULL DEFAULT '',

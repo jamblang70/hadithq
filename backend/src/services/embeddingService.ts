@@ -25,7 +25,11 @@ export class EmbeddingService {
   private client: OpenAI;
 
   constructor(client?: OpenAI) {
-    this.client = client ?? new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // Use sumopod for embeddings (same as LLM provider)
+    this.client = client ?? new OpenAI({ 
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: process.env.OPENAI_BASE_URL
+    });
   }
 
   /**

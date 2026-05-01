@@ -65,8 +65,8 @@ export function validateSearch(
     return;
   }
 
-  // Validate min_score (optional, default 0.5)
-  const minScore = body.min_score ?? 0.5;
+  // Validate min_score (optional, default 0.2)
+  const minScore = body.min_score ?? 0.2;
   if (typeof minScore !== "number" || minScore < 0 || minScore > 1) {
     res.status(400).json({
       error: "min_score must be a number between 0.0 and 1.0",
