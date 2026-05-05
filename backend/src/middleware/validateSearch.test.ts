@@ -21,7 +21,7 @@ describe("validateSearch middleware", () => {
     expect(sr.language).toBe("en");
     expect(sr.limit).toBe(20);
     expect(sr.offset).toBe(0);
-    expect(sr.min_score).toBe(0.5);
+    expect(sr.min_score).toBe(0.2);
     expect(sr.collections).toEqual([]);
     expect(sr.grade_filter).toEqual([]);
   });
