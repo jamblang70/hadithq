@@ -24,7 +24,7 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 ```
 
 - **Frontend**: React 19, Vite, TypeScript — deploy ke Vercel
-- **Backend**: Express.js, TypeScript, Node.js 22 — deploy ke Railway (Docker)
+- **Backend**: Express.js, TypeScript, Node.js 22 — deploy ke Render (free tier)
 - **Database**: PostgreSQL (Neon) untuk metadata hadis
 - **Vector DB**: Qdrant Cloud untuk pencarian semantik
 - **AI**: OpenAI text-embedding-3-small + GPT-4o-mini
@@ -107,12 +107,25 @@ Frontend (React + Vite)  →  Backend (Express.js)  →  PostgreSQL (metadata)
 3. Set env: `VITE_API_BASE_URL` = URL backend produksi
 4. Deploy otomatis pada push ke `main`
 
-### Backend — Railway
+### Backend — Render (free tier)
 
-1. Connect repo GitHub ke Railway
-2. Set root directory: `backend/`
-3. Railway menggunakan `Dockerfile` untuk build
-4. Set env: `DATABASE_URL`, `QDRANT_URL`, `OPENAI_API_KEY`, `ALLOWED_ORIGINS`, `NODE_ENV=production`
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/jamblang70/hadithq)
+
+Atau deploy manual:
+
+1. Buat akun di [render.com](https://render.com) (gratis)
+2. Klik **New > Blueprint** dan connect repo GitHub ini
+3. Render akan membaca `render.yaml` dan membuat service otomatis
+4. Set environment variables berikut di dashboard Render:
+   - `DATABASE_URL` — PostgreSQL connection string (Neon)
+   - `QDRANT_URL` — Qdrant Cloud URL
+   - `OPENAI_API_KEY` — API key untuk embeddings dan AI
+   - `OPENAI_BASE_URL` — Base URL provider (opsional, default: OpenAI)
+   - `LLM_MODEL` — Model untuk AI chat/search (opsional, default: gpt-4o-mini)
+   - `ALLOWED_ORIGINS` — URL frontend, contoh: `https://hadithq-frontend.vercel.app`
+5. Deploy otomatis pada push ke `main`
+
+> **Catatan:** Free tier Render akan sleep setelah 15 menit tidak ada traffic. Request pertama setelah sleep akan memakan waktu ~30 detik (cold start).
 
 ## Lisensi
 
