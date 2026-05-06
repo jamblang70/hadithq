@@ -202,12 +202,15 @@ export async function semanticSearch(
     let results: SearchResult[];
 
     try {
-      // 3. Translate query to English for better embedding match
-      const searchQuery = await translateToEnglish(
-        request.query,
-        deps.openaiClient,
-        deps.cacheRepository
-      );
+      // 3. Translate query to English when targeting English vectors
+      const searchQuery =
+        !request.language || request.language === "en"
+          ? await translateToEnglish(
+              request.query,
+              deps.openaiClient,
+              deps.cacheRepository
+            )
+          : request.query;
 
       // 4. Generate embedding for query
       const queryEmbedding = await deps.embeddingService.generateEmbedding(
