@@ -188,18 +188,33 @@ export async function semanticSearch(
     const hadiths = await deps.hadithRepository.getHadithByIds(hadithIds);
     const hadithMap = new Map(hadiths.map((h) => [h.id, h]));
 
-    // 8. Build SearchResult array
+    // 8. Build SearchResult array (deduplicate by hadith_id, keep highest score)
+    const seen = new Map<string, number>();
     results = [];
     for (const vr of vectorResults) {
       const hadith = hadithMap.get(vr.payload.hadith_id);
-      if (hadith) {
-        results.push({
-          hadith,
-          similarity_score: vr.score,
-          matched_language: request.language,
-          highlight_text: "",
-        });
+      if (!hadith) continue;
+
+      const existing = seen.get(hadith.id);
+      if (existing !== undefined) {
+        if (vr.score > results[existing].similarity_score) {
+          results[existing] = {
+            hadith,
+            similarity_score: vr.score,
+            matched_language: request.language,
+            highlight_text: "",
+          };
+        }
+        continue;
       }
+
+      seen.set(hadith.id, results.length);
+      results.push({
+        hadith,
+        similarity_score: vr.score,
+        matched_language: request.language,
+        highlight_text: "",
+      });
     }
   } catch (error) {
     // Fallback: full-text search in PostgreSQL when embedding or vector DB fails
