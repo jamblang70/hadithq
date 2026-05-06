@@ -10,6 +10,7 @@ interface Props {
   onToggleBookmark: () => void;
   onCopyHadith: () => void;
   onShareHadith: () => void;
+  showEnglish?: boolean;
 }
 
 const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
@@ -22,6 +23,7 @@ export default function HadithDetail({
   onToggleBookmark,
   onCopyHadith,
   onShareHadith,
+  showEnglish = true,
 }: Props) {
   const [hadith, setHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,7 +128,7 @@ export default function HadithDetail({
         </section>
       )}
 
-      {hadith.text_english && (
+      {showEnglish && hadith.text_english && (
         <section className="detail-section">
           <h3>English Translation</h3>
           <p>{hadith.text_english}</p>

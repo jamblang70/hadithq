@@ -12,6 +12,7 @@ interface Props {
   onCopyHadith: (hadith: Hadith) => void;
   onShareHadith: (hadith: Hadith) => void;
   aiExplanations?: Record<string, string>;
+  showEnglish?: boolean;
 }
 
 const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
@@ -26,6 +27,7 @@ export default function SearchResults({
   onCopyHadith,
   onShareHadith,
   aiExplanations = {},
+  showEnglish = true,
 }: Props) {
   const { results, total_count, total_pages, processing_time_ms } = response;
   const [copiedMap, setCopiedMap] = useState<Map<string, boolean>>(new Map());
@@ -69,7 +71,7 @@ export default function SearchResults({
                     {r.hadith.text_arabic}
                   </p>
                 )}
-                {r.hadith.text_english && (
+                {showEnglish && r.hadith.text_english && (
                   <p className="translation-text">{r.hadith.text_english}</p>
                 )}
                 {r.hadith.text_indonesian && (
