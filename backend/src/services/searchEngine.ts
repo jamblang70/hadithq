@@ -8,6 +8,7 @@ import type { EmbeddingService } from "./embeddingService.js";
 import type { VectorRepository } from "../repositories/vectorRepository.js";
 import type { HadithRepository } from "../repositories/hadithRepository.js";
 import type { CacheRepository } from "../repositories/cacheRepository.js";
+import OpenAI from "openai";
 
 /**
  * Dependencies injected into semanticSearch for testability.
@@ -17,6 +18,7 @@ export interface SearchDependencies {
   vectorRepository: VectorRepository;
   hadithRepository: HadithRepository;
   cacheRepository: CacheRepository;
+  openaiClient?: OpenAI;
 }
 
 /**
@@ -121,6 +123,48 @@ export function rerank(results: SearchResult[]): RankedSearchResult[] {
 const CACHE_TTL_SECONDS = 3600;
 
 /**
+ * Translate a query to English for better embedding match.
+ * Embeddings are generated from English hadith text, so searching
+ * in English yields much better semantic similarity results.
+ */
+async function translateToEnglish(
+  query: string,
+  client: OpenAI | undefined,
+  cache: CacheRepository
+): Promise<string> {
+  if (!client) return query;
+
+  // Check if query is likely already English (simple heuristic)
+  if (/^[a-zA-Z0-9\s.,;:!?'"()\-]+$/.test(query)) return query;
+
+  const translationKey = cache.generateKey("translate", query);
+  const cached = cache.get<string>(translationKey);
+  if (cached) return cached;
+
+  try {
+    const response = await client.chat.completions.create({
+      model: process.env.LLM_MODEL || "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Translate the user's query to English. Output ONLY the English translation, nothing else. Keep it concise.",
+        },
+        { role: "user", content: query },
+      ],
+      temperature: 0,
+      max_tokens: 100,
+    });
+    const translated =
+      response.choices[0]?.message?.content?.trim() || query;
+    cache.set(translationKey, translated, CACHE_TTL_SECONDS);
+    return translated;
+  } catch {
+    return query;
+  }
+}
+
+/**
  * semanticSearch - alur pencarian utama.
  *
  * 1. Generate cache key dari query + collections + language
@@ -158,19 +202,29 @@ export async function semanticSearch(
     let results: SearchResult[];
 
     try {
-      // 3. Generate embedding for query
+      // 3. Translate query to English when targeting English vectors
+      const searchQuery =
+        !request.language || request.language === "en"
+          ? await translateToEnglish(
+              request.query,
+              deps.openaiClient,
+              deps.cacheRepository
+            )
+          : request.query;
+
+      // 4. Generate embedding for query
       const queryEmbedding = await deps.embeddingService.generateEmbedding(
-        request.query
+        searchQuery
       );
 
-      // 4. Build filter expression
+      // 5. Build filter expression
       const filterExpr = buildFilterExpression({
         collections: request.collections,
         grade_filter: request.grade_filter,
         language: request.language,
       });
 
-      // 5. Vector similarity search (fetch enough results for all pages)
+      // 6. Vector similarity search (fetch enough results for all pages)
       const topK = Math.min(200, Math.max(request.limit * 4, 80));
       const vectorResults = await deps.vectorRepository.search(
         queryEmbedding,
@@ -179,14 +233,14 @@ export async function semanticSearch(
         request.min_score
       );
 
-      // 6. Extract hadith IDs from vector results
+      // 7. Extract hadith IDs from vector results
       const hadithIds = vectorResults.map((vr) => vr.payload.hadith_id);
 
-      // 7. Fetch hadith metadata from PostgreSQL
+      // 8. Fetch hadith metadata from PostgreSQL
       const hadiths = await deps.hadithRepository.getHadithByIds(hadithIds);
       const hadithMap = new Map(hadiths.map((h) => [h.id, h]));
 
-      // 8. Build SearchResult array (deduplicate by hadith_id, keep highest score)
+      // 9. Build SearchResult array (deduplicate by hadith_id, keep highest score)
       const seen = new Map<string, number>();
       results = [];
       for (const vr of vectorResults) {
@@ -236,21 +290,21 @@ export async function semanticSearch(
       }));
     }
 
-    // 9. Re-rank
+    // 10. Re-rank
     ranked = rerank(results);
 
     // Cache ranked results for pagination
     deps.cacheRepository.set(cacheKey, ranked, CACHE_TTL_SECONDS);
   }
 
-  // 10. Pagination
+  // 11. Pagination
   const totalCount = ranked.length;
   const paginated = ranked.slice(
     request.offset,
     request.offset + request.limit
   );
 
-  // 11. Build SearchResponse
+  // 12. Build SearchResponse
   const processingTimeMs = Date.now() - startTime;
   const page = Math.floor(request.offset / request.limit) + 1;
   const totalPages = Math.ceil(totalCount / request.limit);

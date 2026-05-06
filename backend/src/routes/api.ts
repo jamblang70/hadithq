@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import OpenAI from "openai";
 import { validateSearch } from "../middleware/validateSearch.js";
 import { semanticSearch } from "../services/searchEngine.js";
 import { AiSearchService } from "../services/aiSearchService.js";
@@ -20,6 +21,10 @@ const hadithRepository = new HadithRepository();
 const cacheRepository = new CacheRepository();
 const aiSearchService = new AiSearchService();
 const aiChatService = new AiChatService();
+const openaiClient = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL || "https://api.openai.com/v1",
+});
 
 /**
  * POST /api/search
@@ -38,6 +43,7 @@ router.post(
         vectorRepository,
         hadithRepository,
         cacheRepository,
+        openaiClient,
       });
 
       res.json(response);
@@ -66,6 +72,7 @@ router.post(
         vectorRepository,
         hadithRepository,
         cacheRepository,
+        openaiClient,
       });
 
       res.json(response);
@@ -95,6 +102,7 @@ router.post("/chat", async (req: Request, res: Response): Promise<void> => {
       vectorRepository,
       hadithRepository,
       cacheRepository,
+      openaiClient,
     });
 
     res.json(result);
