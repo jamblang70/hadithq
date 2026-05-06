@@ -134,9 +134,6 @@ async function translateToEnglish(
 ): Promise<string> {
   if (!client) return query;
 
-  // Check if query is likely already English (simple heuristic)
-  if (/^[a-zA-Z0-9\s.,;:!?'"()\-]+$/.test(query)) return query;
-
   const translationKey = cache.generateKey("translate", query);
   const cached = cache.get<string>(translationKey);
   if (cached) return cached;
@@ -148,7 +145,7 @@ async function translateToEnglish(
         {
           role: "system",
           content:
-            "Translate the user's query to English. Output ONLY the English translation, nothing else. Keep it concise.",
+            "Translate the user's query to English for hadith search. If the query is already in English, return it as-is. Output ONLY the English translation, nothing else. Keep it concise.",
         },
         { role: "user", content: query },
       ],
