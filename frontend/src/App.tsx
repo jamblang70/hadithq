@@ -41,6 +41,10 @@ function App() {
     if (saved) return saved === "dark";
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
+  const [showEnglish, setShowEnglish] = useState(() => {
+    const saved = localStorage.getItem("showEnglish");
+    return saved === null ? true : saved === "true";
+  });
 
   // Track the selected hadith object for detail view actions
   const selectedHadithRef = useRef<Hadith | null>(null);
@@ -54,6 +58,10 @@ function App() {
     document.documentElement.classList.toggle("dark", isDark);
     localStorage.setItem("theme", isDark ? "dark" : "light");
   }, [isDark]);
+
+  useEffect(() => {
+    localStorage.setItem("showEnglish", String(showEnglish));
+  }, [showEnglish]);
 
   useEffect(() => {
     function handleScroll() {
@@ -221,6 +229,14 @@ function App() {
             {isDark ? "☀️" : "🌙"}
           </button>
           <button
+            className={`header-nav-btn${showEnglish ? "" : " active"}`}
+            onClick={() => setShowEnglish((prev) => !prev)}
+            type="button"
+            title={showEnglish ? "Sembunyikan teks Inggris" : "Tampilkan teks Inggris"}
+          >
+            {showEnglish ? "🇬🇧 EN" : "🚫 EN"}
+          </button>
+          <button
             className={`header-nav-btn${view === "chat" ? " active" : ""}`}
             onClick={() => setView("chat")}
             type="button"
@@ -251,6 +267,7 @@ function App() {
             onToggleBookmark={handleDetailToggleBookmark}
             onCopyHadith={handleDetailCopy}
             onShareHadith={handleDetailShare}
+            showEnglish={showEnglish}
           />
         ) : view === "bookmarks" ? (
           <BookmarksView
@@ -298,6 +315,7 @@ function App() {
                 onCopyHadith={handleCopyHadith}
                 onShareHadith={handleShareHadith}
                 aiExplanations={aiExplanations}
+                showEnglish={showEnglish}
               />
             )}
           </>
