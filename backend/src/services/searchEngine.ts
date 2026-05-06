@@ -142,104 +142,106 @@ export async function semanticSearch(
 ): Promise<SearchResponse> {
   const startTime = Date.now();
 
-  // 1. Generate cache key
+  // 1. Generate cache key (excludes offset so all pages share ranked results)
   const cacheKey = deps.cacheRepository.generateKey(
-    "search",
+    "ranked",
     request.query,
     (request.collections ?? []).sort().join(","),
     request.language
   );
 
-  // 2. Check cache
-  const cached = deps.cacheRepository.get<SearchResponse>(cacheKey);
-  if (cached) {
-    return cached;
-  }
+  // 2. Check cache for ranked results
+  let ranked = deps.cacheRepository.get<RankedSearchResult[]>(cacheKey);
 
-  // 3-8. Try vector search; fallback to full-text search on failure
-  let results: SearchResult[];
+  if (!ranked) {
+    // 3-9. Compute ranked results
+    let results: SearchResult[];
 
-  try {
-    // 3. Generate embedding for query
-    const queryEmbedding = await deps.embeddingService.generateEmbedding(
-      request.query
-    );
+    try {
+      // 3. Generate embedding for query
+      const queryEmbedding = await deps.embeddingService.generateEmbedding(
+        request.query
+      );
 
-    // 4. Build filter expression
-    const filterExpr = buildFilterExpression({
-      collections: request.collections,
-      grade_filter: request.grade_filter,
-      language: request.language,
-    });
+      // 4. Build filter expression
+      const filterExpr = buildFilterExpression({
+        collections: request.collections,
+        grade_filter: request.grade_filter,
+        language: request.language,
+      });
 
-    // 5. Vector similarity search (fetch extra for re-ranking)
-    const topK = request.limit * 2;
-    const vectorResults = await deps.vectorRepository.search(
-      queryEmbedding,
-      topK,
-      filterExpr,
-      request.min_score
-    );
+      // 5. Vector similarity search (fetch enough results for all pages)
+      const topK = Math.min(200, Math.max(request.limit * 4, 80));
+      const vectorResults = await deps.vectorRepository.search(
+        queryEmbedding,
+        topK,
+        filterExpr,
+        request.min_score
+      );
 
-    // 6. Extract hadith IDs from vector results
-    const hadithIds = vectorResults.map((vr) => vr.payload.hadith_id);
+      // 6. Extract hadith IDs from vector results
+      const hadithIds = vectorResults.map((vr) => vr.payload.hadith_id);
 
-    // 7. Fetch hadith metadata from PostgreSQL
-    const hadiths = await deps.hadithRepository.getHadithByIds(hadithIds);
-    const hadithMap = new Map(hadiths.map((h) => [h.id, h]));
+      // 7. Fetch hadith metadata from PostgreSQL
+      const hadiths = await deps.hadithRepository.getHadithByIds(hadithIds);
+      const hadithMap = new Map(hadiths.map((h) => [h.id, h]));
 
-    // 8. Build SearchResult array (deduplicate by hadith_id, keep highest score)
-    const seen = new Map<string, number>();
-    results = [];
-    for (const vr of vectorResults) {
-      const hadith = hadithMap.get(vr.payload.hadith_id);
-      if (!hadith) continue;
+      // 8. Build SearchResult array (deduplicate by hadith_id, keep highest score)
+      const seen = new Map<string, number>();
+      results = [];
+      for (const vr of vectorResults) {
+        const hadith = hadithMap.get(vr.payload.hadith_id);
+        if (!hadith) continue;
 
-      const existing = seen.get(hadith.id);
-      if (existing !== undefined) {
-        if (vr.score > results[existing].similarity_score) {
-          results[existing] = {
-            hadith,
-            similarity_score: vr.score,
-            matched_language: request.language,
-            highlight_text: "",
-          };
+        const existing = seen.get(hadith.id);
+        if (existing !== undefined) {
+          if (vr.score > results[existing].similarity_score) {
+            results[existing] = {
+              hadith,
+              similarity_score: vr.score,
+              matched_language: request.language,
+              highlight_text: "",
+            };
+          }
+          continue;
         }
-        continue;
-      }
 
-      seen.set(hadith.id, results.length);
-      results.push({
+        seen.set(hadith.id, results.length);
+        results.push({
+          hadith,
+          similarity_score: vr.score,
+          matched_language: request.language,
+          highlight_text: "",
+        });
+      }
+    } catch (error) {
+      // Fallback: full-text search in PostgreSQL when embedding or vector DB fails
+      console.error(
+        "Vector search failed, falling back to full-text search:",
+        error instanceof Error ? error.message : error
+      );
+
+      const fallbackHadiths = await deps.hadithRepository.fullTextSearch(
+        request.query,
+        request.collections ?? [],
+        request.limit * 2,
+        0
+      );
+
+      results = fallbackHadiths.map((hadith) => ({
         hadith,
-        similarity_score: vr.score,
+        similarity_score: 0,
         matched_language: request.language,
         highlight_text: "",
-      });
+      }));
     }
-  } catch (error) {
-    // Fallback: full-text search in PostgreSQL when embedding or vector DB fails
-    console.error(
-      "Vector search failed, falling back to full-text search:",
-      error instanceof Error ? error.message : error
-    );
 
-    const fallbackHadiths = await deps.hadithRepository.fullTextSearch(
-      request.query,
-      request.collections ?? [],
-      request.limit * 2,
-      0
-    );
+    // 9. Re-rank
+    ranked = rerank(results);
 
-    results = fallbackHadiths.map((hadith) => ({
-      hadith,
-      similarity_score: 0,
-      matched_language: request.language,
-      highlight_text: "",
-    }));
+    // Cache ranked results for pagination
+    deps.cacheRepository.set(cacheKey, ranked, CACHE_TTL_SECONDS);
   }
-
-  // 9. Re-rank
-  const ranked = rerank(results);
 
   // 10. Pagination
   const totalCount = ranked.length;
@@ -261,9 +263,6 @@ export async function semanticSearch(
     page,
     total_pages: totalPages,
   };
-
-  // 12. Cache the response
-  deps.cacheRepository.set(cacheKey, response, CACHE_TTL_SECONDS);
 
   return response;
 }

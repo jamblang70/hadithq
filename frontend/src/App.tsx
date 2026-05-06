@@ -88,7 +88,7 @@ function App() {
           grade_filter: filters.grades,
           limit: LIMIT,
           offset: (page - 1) * LIMIT,
-          min_score: 0.35,
+          min_score: 0.4,
         };
 
         if (useAi) {
