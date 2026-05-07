@@ -2,15 +2,7 @@ import OpenAI from "openai";
 import type { SearchResult, SearchRequest } from "../types/index.js";
 import { semanticSearch, type SearchDependencies } from "./searchEngine.js";
 
-const SYSTEM_PROMPT = `Kamu adalah asisten ahli hadis. Tugasmu menjawab pertanyaan pengguna tentang hadis dengan mengutip hadis-hadis yang relevan dari database.
-
-Aturan:
-- Jawab dalam bahasa yang sama dengan pertanyaan pengguna
-- Selalu kutip hadis yang relevan dengan menyebutkan nama kitab dan nomor hadis
-- Jika tidak ada hadis yang relevan, katakan dengan jujur
-- Berikan penjelasan singkat tentang konteks hadis
-- Jawab dengan sopan dan ilmiah
-- Jangan mengarang hadis yang tidak ada di database`;
+const SYSTEM_PROMPT = `Kamu adalah asisten ahli hadis. Jawab pertanyaan tentang hadis dengan mengutip hadis yang relevan. Gunakan format [REF-N] untuk referensi.`;
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -45,20 +37,24 @@ export class AiChatService {
 
     const searchResults = await semanticSearch(searchRequest, deps);
 
-    // Step 2: Build context from search results — include index so AI can reference them
+    // Step 2: Build context from search results — limit text length for MiniMax compatibility
     const hadithContext = searchResults.results.map((r: SearchResult, i: number) => {
       const h = r.hadith;
-      const text = h.text_indonesian || h.text_english || "";
-      return `[REF-${i + 1}] ${h.collection_name} #${h.hadith_number} (${h.grade}):\n${text}`;
+      const text = (h.text_indonesian || h.text_english || "").slice(0, 200); // Limit to 200 chars
+      return `[REF-${i + 1}] ${h.collection_name} #${h.hadith_number}: ${text}`;
     }).join("\n\n");
 
-    // Step 3: Build messages
+    // Step 3: Build messages — combine system prompts into one for MiniMax compatibility
+    const combinedSystemPrompt = `${SYSTEM_PROMPT}
+
+Berikut hadis-hadis yang relevan dari database:
+
+${hadithContext}
+
+Saat mengutip hadis, gunakan format [REF-N] (contoh: [REF-1], [REF-2]) agar referensi bisa dilacak. Hanya kutip hadis yang benar-benar relevan dengan pertanyaan.`;
+
     const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "system",
-        content: `Berikut hadis-hadis yang relevan dari database:\n\n${hadithContext}\n\nSaat mengutip hadis, gunakan format [REF-N] (contoh: [REF-1], [REF-2]) agar referensi bisa dilacak. Hanya kutip hadis yang benar-benar relevan dengan pertanyaan.`,
-      },
+      { role: "system", content: combinedSystemPrompt },
     ];
 
     // Add conversation history (last 6 messages)
@@ -73,8 +69,6 @@ export class AiChatService {
     const completion = await this.client.chat.completions.create({
       model: process.env.LLM_MODEL || "gpt-4o-mini",
       messages,
-      temperature: 0.3,
-      max_tokens: 800,
     });
 
     const reply = completion.choices[0]?.message?.content || "Maaf, saya tidak bisa menjawab saat ini.";

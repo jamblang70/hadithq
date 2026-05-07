@@ -85,9 +85,7 @@ export class AiSearchService {
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userMessage },
         ],
-        temperature: 0.1,
-        max_tokens: 1000,
-        response_format: { type: "json_object" },
+        // Remove temperature, max_tokens, and response_format for MiniMax compatibility
       });
 
       const content = completion.choices[0]?.message?.content;
